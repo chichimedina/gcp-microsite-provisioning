@@ -45,13 +45,7 @@ firewall_rules () {
 
 
   echo
-  gcloud compute firewall-rules create bastion-deny-22-tcp  \
-         --network=default                                  \
-         --action deny                                      \
-         --rules tcp:22                                     \
-         --source-ranges 0.0.0.0/0                          \
-         --target-tags=bastion                              \
-         --priority 500
+  gcloud compute firewall-rules create bastion-deny-22-tcp --network=default --action deny --rules tcp:22 --source-ranges 0.0.0.0/0 --target-tags=bastion --priority 500
 
   echo
   gcloud compute firewall-rules create bastion-allow-22-tcp --network=default --action allow --rules tcp:22 --source-ranges 35.235.240.0/20,55.45.190.0/24,123.123.0.0/20 --target-tags=bastion --priority 50
@@ -80,21 +74,35 @@ firewall_rules () {
   ## Allow traffic to 443/TCP from anywhere with low priority
   gcloud compute --project=assignments-01-285722 firewall-rules create frontend-allow-internet-only-44-tcp --direction=INGRESS --priority=500 --network=default --action=ALLOW --rules=tcp:443 --source-ranges=0.0.0.0/0 --target-tags=frontend
 
+  echo
+  ## Block any outgoing connections to Internet
+  gcloud compute firewall-rules create internet-deny --direction=EGRESS --priority=500 --network=default --action=DENY --rules=all --destination-ranges=0.0.0.0/0 --target-tags=bastion,frontend,backend
+
+  echo
+  ## Allow any connections to the rest of the internal network (this will depend on other firewall rules and their priorities)
+  gcloud compute firewall-rules create internet-allow --direction=EGRESS --priority=60 --network=default --action=ALLOW --rules=all --destination-ranges=10.0.0.0/8 --target-tags=bastion,frontend,backend
+
 }
 
 
-###network_provisioning $BASTION_NET_NAME $BASTION_NET_RANGE
-###network_provisioning $FRONTEND_NET_NAME $FRONTEND_NET_RANGE
-###network_provisioning $BACKEND_NET_NAME $BACKEND_NET_RANGE
 
 echo -e "\n\n\t\tMicro-App Deployment"
 echo -e "\t\t++++++++++++++++++++\n\n"
 
 
+
+echo -e "--------\nPROVISIONING THE SUBNETS:\n--------\n"
+
+network_provisioning $BASTION_NET_NAME $BASTION_NET_RANGE
+network_provisioning $FRONTEND_NET_NAME $FRONTEND_NET_RANGE
+network_provisioning $BACKEND_NET_NAME $BACKEND_NET_RANGE
+
+
+
 echo -e "--------\nPROVISIONING THE INSTANCES:\n--------\n"
 
 echo -e "\n>>> Creating and setting up the \"bastion\" instance ... "
-###vm_provisioning $BASTION_VHOSTNAME $BASTION_NET_NAME "true" $BASTION_TAGS $BASTION_SSCRIPT "BASTION_ALLOW_USERS=${BASTION_ALLOW_USERS// /.}"
+vm_provisioning $BASTION_VHOSTNAME $BASTION_NET_NAME "true" $BASTION_TAGS $BASTION_SSCRIPT "BASTION_ALLOW_USERS=${BASTION_ALLOW_USERS// /.}"
 echo -e "----------\n"
 
 echo -e "\n>>> Creating and setting up  the \"frontend\" instance ... "
@@ -105,7 +113,9 @@ echo -e "\n>>> Provisioning the \"backend\" instance ... "
 vm_provisioning $BACKEND_VHOSTNAME $BACKEND_NET_NAME "true" $BACKEND_TAGS $BACKEND_SSCRIPT ""
 echo -e "----------\n"
 
-###echo -e "\n\n--------\nSETTING UP SOME FIREWALL RULES:\n--------\n"
+
+
+echo -e "\n\n--------\nSETTING UP SOME FIREWALL RULES:\n--------\n"
 firewall_rules
 
 echo -ne "\n\n\n>>> ONE LAST STEP - Removing NAT IP (External IP) from the \"backend\" instance ... "
