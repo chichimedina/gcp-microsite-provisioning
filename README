@@ -1,1 +1,88 @@
+Welcome to MicroApp deployment script!
+--------------------------------------
 
+This script is meant to build a basic cloud infrastructure for Firefly software folks :-)
+
+It consists of:
+-- 3 x GCS Linux instances
+-- 3 x GCS subnets
+-- A bunch of firewall rules at infrastructure level (not O.S. level - i.e. iptables)
+
+The script is based on Google Cloud SDK and the system where it will run on needs to have these packages installed and configured.
+
+Any instance in GCS meets this dependency and should run this deployments with no issues.
+
+
+
+
+1. PARTS OF THE SCRIPT:
+
+1.1 "microapp-provisioning.sh"
+
+  Core script that deploys the cloud infrastructure and the app.
+
+1.2 "conf/" directory
+
+  Configuration directory where the deployment script config file(s) resides in.
+  This configuration file(s) contain the settings required to let the script know the names of the cloud resources, where to get app files, etc. Take a look at it!
+
+1.3 "startup-script/" directory
+
+  This directory contains shell scripts, one per instance type, that will set up the O.S. for the application as a whole to work.
+  They work as a configuration management tool for the O.S. and the app.
+
+1.4 "files" directory
+
+  It has static files for the app mostly:
+    "html/": a static homepage html file.
+    "cert/": a SSL certificate/private key pair
+    "apache/": Apache's default SSL site file
+
+
+
+2. HOW TO USE THIS DEPLOYMENT SCRIPT
+
+2.1 Requirements:
+
+  2.1.1 The script can run on Red Hat-like or Debian-like systems.
+
+  2.1.2 The script is based on Google Cloud SDK and the system where it will run on needs to have these packages installed and configured.
+        The script will double check if this dependency is met and fails if it doesn't.
+
+2.2. Usage:
+
+  2.2.1 The deployment script is pretty much ready to go .... but you may need to change a couple of settings in the configuration file depending on your needs:
+
+        BASTION_ALLOW_LIST: comma-separated list of network addresses that SSH access will be allowed from on the JUMPHOST/BASTION instance.
+                            "35.235.240.0/20" is mandatory for Google Cloud Services.
+                            This meets the "allow-list" assignment's requirement.
+
+        BASTION_ALLOW_USERS: space-separated list of usernames allowed to SSH on to the JUMPHOST/BASTION instance.
+                             Leave it blank if you run into issues.
+
+  2.2.2 Run the script:
+
+        cd assignments-01
+        ./microapp-provisioning.sh
+
+        --> No parameters at command line are required as they're all set in conf/microapp.conf file.
+
+
+3. LIMITATIONS
+
+  -- The deployment script was written in a way that only three networks, three instances and ten firewall rules will be managed. This can easily be overcome by setting up a JSON file as a configuration file where all the resources (and their info) are listed and no matter the number of resources they will all be created/terminated in a loop.
+  -- There's no a resource termination process.
+
+  See next "IMPROVEMENTS" section.
+
+
+
+3. IMPROVEMENTS
+
+  Due to lack of time, the following was the original idea to do:
+
+  -- JSON configuration rather than a shell-like file. Having a JSON conf file would let the scripts to create/terminate resources programmatically without changing the code.
+
+  -- More error handling code.
+
+  -- Add a resource termination process to complete the MicroApp provisioning.
