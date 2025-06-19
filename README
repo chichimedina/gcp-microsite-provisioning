@@ -1,7 +1,7 @@
 Welcome to MicroApp deployment script!
 --------------------------------------
 
-This script is meant to build a basic cloud infrastructure for Firefly software folks :-)
+This script is meant to build a basic cloud infrastructure on GCP (Google Cloud Platform)  :-)
 
 It consists of:
 -- 3 x GCS Linux instances

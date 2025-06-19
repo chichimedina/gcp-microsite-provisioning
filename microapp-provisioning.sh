@@ -162,6 +162,7 @@ echo -e "----------\n"
 
 echo -e "\n>>> Creating and setting up  the \"frontend\" instance ... "
 vm_provisioning $FRONTEND_VHOSTNAME $FRONTEND_NET_NAME "true" $FRONTEND_TAGS $FRONTEND_SSCRIPT "FRONTEND_SSL_SITE=${FRONTEND_SSL_SITE},FRONTEND_SSL_CERT=${FRONTEND_SSL_CERT},FRONTEND_HOMEPAGE=${FRONTEND_HOMEPAGE}"
+
 echo -e "----------\n"
 
 echo -e "\n>>> Provisioning the \"backend\" instance ... "
